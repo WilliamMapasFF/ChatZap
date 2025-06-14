@@ -139,15 +139,6 @@
       return null;
     }
 
-    function enviar(event) {
-      event.preventDefault();
-      const texto = entrada.value.trim();
-      if (texto === "") return;
-      adicionarMensagem(texto, "user");
-      entrada.value = "";
-      setTimeout(() => responder(texto), 300);
-    }
-
     function adicionarMensagem(msg, classe) {
       const div = document.createElement("div");
       div.className = `msg ${classe}`;
@@ -158,6 +149,17 @@
       div.appendChild(hora);
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
+    }
+
+    function formatarNumero(num) {
+      const partes = num.toString().split(".");
+      partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      if (partes[1]) {
+        partes[1] = partes[1].replace(/0+$/, "");
+        return partes[1].length > 0 ? partes[0] + "," + partes[1] : partes[0];
+      } else {
+        return partes[0];
+      }
     }
 
     function responder(txt) {
@@ -187,10 +189,21 @@
         const resultado = Function("toRad", `return ${expr}`)(toRad);
 
         if (isNaN(resultado)) throw "Erro";
-        adicionarMensagem("🧠 Resultado: " + resultado, "bot");
+
+        const resultadoFormatado = formatarNumero(resultado);
+        adicionarMensagem("🧠 Resultado: " + resultadoFormatado, "bot");
       } catch (err) {
         adicionarMensagem("❌ Erro na conta!", "bot");
       }
+    }
+
+    function enviar(event) {
+      event.preventDefault();
+      const texto = entrada.value.trim();
+      if (texto === "") return;
+      adicionarMensagem(texto, "user");
+      entrada.value = "";
+      setTimeout(() => responder(texto), 300);
     }
   </script>
 </body>
