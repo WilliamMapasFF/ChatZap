@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ChatZap</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #121212;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      color: #e0e0e0;
+    }
+    .topbar {
+      background: #1f1f1f;
+      color: white;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 1px 2px #000;
+    }
+    .topbar img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .topbar div {
+      display: flex;
+      flex-direction: column;
+    }
+    .topbar .nome {
+      font-weight: bold;
+    }
+    .topbar .status {
+      font-size: 12px;
+      color: #ccc;
+    }
+    #chat {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .msg {
+      max-width: 70%;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 10px;
+      word-wrap: break-word;
+      font-size: 16px;
+      position: relative;
+    }
+    .user {
+      background: #056162;
+      align-self: flex-end;
+      color: white;
+    }
+    .bot {
+      background: #2a2a2a;
+      align-self: flex-start;
+      color: white;
+    }
+    .hora {
+      position: absolute;
+      bottom: 2px;
+      right: 10px;
+      font-size: 10px;
+      opacity: 0.5;
+    }
+    #form {
+      display: flex;
+      padding: 10px;
+      background: #1e1e1e;
+    }
+    #entrada {
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #444;
+      outline: none;
+      font-size: 16px;
+      background: #2c2c2c;
+      color: white;
+    }
+    #btn {
+      margin-left: 10px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      background: #25d366;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <img src="https://i.imgur.com/4M34hi2.png" alt="Perfil" />
+    <div>
+      <div class="nome">Tio Nerd</div>
+      <div class="status">online</div>
+    </div>
+  </div>
+
+  <div id="chat"></div>
+  <form id="form" onsubmit="enviar(event)">
+    <input type="text" id="entrada" placeholder="Digite uma mensagem..." autocomplete="off" />
+    <button id="btn">Enviar</button>
+  </form>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const entrada = document.getElementById("entrada");
+
+    function horaAgora() {
+      const agora = new Date();
+      return agora.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    const respostasFixas = {
+      oi: "E aí, tudo certo?",
+      "como vai": "Na luta, mas firme!",
+      "qual é a conta": "Manda aí que eu calculo pra você",
+      "tudo bem": "Tranquilo, só na correria!",
+      "fala aí": "Só no talento, meu chapa!",
+      "quem é você": "Um bot disfarçado de gente, hehe",
+    };
+
+    function responderTxt(txt) {
+      const chave = txt.toLowerCase().replace(/[?!.,]/g, "").trim();
+      if (respostasFixas[chave]) return respostasFixas[chave];
+      return null;
+    }
+
+    function enviar(event) {
+      event.preventDefault();
+      const texto = entrada.value.trim();
+      if (texto === "") return;
+      adicionarMensagem(texto, "user");
+      entrada.value = "";
+      setTimeout(() => responder(texto), 300);
+    }
+
+    function adicionarMensagem(msg, classe) {
+      const div = document.createElement("div");
+      div.className = `msg ${classe}`;
+      div.innerText = msg;
+      const hora = document.createElement("span");
+      hora.className = "hora";
+      hora.textContent = horaAgora();
+      div.appendChild(hora);
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function responder(txt) {
+      const respostaPessoal = responderTxt(txt);
+      if (respostaPessoal) {
+        adicionarMensagem(respostaPessoal, "bot");
+        return;
+      }
+
+      try {
+        let expr = txt
+          .replace(/\s+/g, "")
+          .replace(/\^/g, "**")
+          .replace(/√?([^)]+)?/g, "Math.sqrt($1)")
+          .replace(/raiz?([^)]+)?/gi, "Math.sqrt($1)")
+          .replace(/sen?([^)]+)?/gi, "Math.sin(toRad($1))")
+          .replace(/cos?([^)]+)?/gi, "Math.cos(toRad($1))")
+          .replace(/tan?([^)]+)?/gi, "Math.tan(toRad($1))")
+          .replace(/log10?([^)]+)?/gi, "Math.log10($1)")
+          .replace(/log?([^)]+)?/gi, "Math.log10($1)")
+          .replace(/ln?([^)]+)?/gi, "Math.log($1)")
+          .replace(/pi|π/gi, "Math.PI")
+          .replace(/\be\b/gi, "Math.E")
+          .replace(/%/g, "*0.01");
+
+        const toRad = (deg) => (deg * Math.PI) / 180;
+        const resultado = Function("toRad", `return ${expr}`)(toRad);
+
+        if (isNaN(resultado)) throw "Erro";
+        adicionarMensagem("🧠 Resultado: " + resultado, "bot");
+      } catch (err) {
+        adicionarMensagem("❌ Erro na conta!", "bot");
+      }
+    }
+  </script>
+</body>
+</html>
